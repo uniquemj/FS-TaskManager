@@ -1,7 +1,6 @@
-import fs from 'fs/promises'
-import path, { resolve } from 'path'
+import path from 'path'
 import { readFileHelper, writeFileHelper } from '../utils/helper'
-import { rejects } from 'assert'
+import { Task } from '../types/task.type'
 
 const storagePath = path.join(process.cwd(), 'data.json')
 
@@ -23,13 +22,13 @@ export const findById = (id: string) =>{
         const tasks = await readFileHelper(storagePath)
         const task = tasks.find((task) => task['id'] == id)
         if(!task){
-            reject("No Task Found")
+            reject(false)
         }
         resolve(task)
     })
 }
 
-export const create = (todo: any) =>{
+export const create = (todo: Task) =>{
     return new Promise(async(resolve, reject) =>{
         try{
             const tasks = await readFileHelper(storagePath)
@@ -42,7 +41,7 @@ export const create = (todo: any) =>{
     })
 }
 
-export const edit = (id: string, todo: any) =>{
+export const edit = (id: string, todo: Task) =>{
     return new Promise(async(resolve, reject) =>{
         const tasks = await readFileHelper(storagePath)
         const task = tasks.find(task=>task.id===id)
@@ -60,7 +59,7 @@ export const remove = (id: string) =>{
     return new Promise(async(resolve, reject)=>{
         const tasks = await readFileHelper(storagePath)
         if(!tasks.find(task=>task.id==id)){
-            reject("No Task Found")
+            reject(false)
         }
         const newTasks = tasks.filter(task => task.id !== id)
         await writeFileHelper(storagePath, JSON.stringify(newTasks))

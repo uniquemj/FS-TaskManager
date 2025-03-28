@@ -1,20 +1,25 @@
 import { Request, Response } from "express"
 import { v4 } from "uuid"
-import { createTaskServices, editTaskServices, getAllTaskServices, getTaskByIDServices, removeTaskServices } from "../services/task.services"
+import TaskServices from "../services/task.services"
+import { Task, TasksResponse, MessageResponse} from "../types/task.type"
 
-export const getAllTaskController = async (req: Request, res: Response): Promise<any> =>{
+const getAllTasks = async (req: Request, res: Response): Promise<Response<TasksResponse | MessageResponse>> =>{
     try{
-        const result = await getAllTaskServices()
+        const result = await TaskServices.getAllTasks() as Task[]
+        if(result.length == 0){
+            return res.status(404).send({message: "No Tasks Found."})
+        }
         return res.status(200).send({data: result})
     } catch(e:any){
         return res.status(500).send({message: "Data Storage Not Initialized. Doing it for you."})
     }
 }
 
-export const getTaskByIDController = async (req: Request, res: Response): Promise<any> =>{
+const getTaskByID = async (req: Request, res: Response): Promise<Response<Task|MessageResponse>> =>{
     try{
         const {id} = req.params
-        const result = await getTaskByIDServices(id)
+        const result = await TaskServices.getTaskByID(id)
+
         if(!result){
             return res.status(404).send({message: "Task Not Found."})
         }
@@ -24,24 +29,24 @@ export const getTaskByIDController = async (req: Request, res: Response): Promis
     }
 }
 
-export const createTaskController = async (req: Request, res: Response): Promise<any> => {
+const createTask = async (req: Request, res: Response): Promise<Response<Task|MessageResponse>> => {
     try{
         const task = {
             id: v4(),
             title: req.body.title,
             is_completed: req.body.is_completed || false
         }
-        const result = await createTaskServices(task)
+        const result = await TaskServices.createTask(task)
         return res.status(201).send(result)
     } catch (e:any) {
         return res.status(500).send({message: e.message})
     }
 }
 
-export const editTaskController = async(req: Request, res: Response): Promise<any> =>{
+const editTask = async(req: Request, res: Response): Promise<Response<Task|MessageResponse>> =>{
     try{
         const {id} = req.params
-        const task = await editTaskServices(id, req.body)
+        const task = await TaskServices.editTask(id, req.body)
         if(!task){
             return res.status(404).send({message: "Task Not Found."})
         }
@@ -51,10 +56,11 @@ export const editTaskController = async(req: Request, res: Response): Promise<an
     }
 }
 
-export const removeTaskController = async (req: Request, res: Response): Promise<any> =>{
+const removeTask = async (req: Request, res: Response): Promise<Response<MessageResponse>> =>{
     try{
         const {id} = req.params
-        const result = await removeTaskServices(id)
+        const result = await TaskServices.removeTask(id)
+
         if(!result){
             res.status(404).send({message:"Task Not Found."})
         }
@@ -63,3 +69,13 @@ export const removeTaskController = async (req: Request, res: Response): Promise
         return res.status(500).send({message: e.message})
     }
 }
+
+const TaskController = {
+    getAllTasks,
+    getTaskByID, 
+    createTask, 
+    editTask,
+    removeTask
+}
+
+export default TaskController
